@@ -1,0 +1,67 @@
+# ==============================================================================
+# /etc/grub.d/40_custom 片段 —— z1 内核的三档启动项
+#
+# 安装：把下面 menuentry 段追加到 /boot/grub/grub.cfg 之前先放这里，
+#        然后 sudo chmod +x /etc/grub.d/40_custom && sudo grub-mkconfig -o /boot/grub/grub.cfg
+#
+# ★ 使用前必须改的两处：
+#   1. <KREL>   替换为实际内核版本，如 6.18.57-z1（用 make -s kernelrelease 查）
+#   2. 核编号    下面按 16 核 24 线程（i7-14650HX）示例：
+#                0-11  = housekeeping 核（跑吞吐负载 + 收中断）
+#                12-23 = isolated 核（跑低延迟/实时任务）
+#                不同机器请按实际 nproc 重新划分。
+#
+# ★ PREEMPT_DYNAMIC 的档位是【全局】的，不能按核设置。
+#   真正的"既要吞吐又要低延迟"靠的是：档位切换 + 下面的 CPU 分区。
+# ==============================================================================
+
+# ---- 档位 A：吞吐量优先 -----------------------------------------------------
+# preempt=none 关闭自愿抢占点，最小化上下文切换开销
+menuentry 'Arch Linux - z1 吞吐档 (preempt=none)' {
+  load_video; set gfxpayload=keep; insmod gzio; insmod part_gpt; insmod ext2
+  search --no-floppy --fs-uuid --set=root <ROOT_UUID>
+  linux /boot/vmlinuz-<KREL> root=UUID=<ROOT_UUID> rw \
+    preempt=none \
+    isolcpus=domain,managed_irq,12-23 nohz_full=12-23 rcu_nocbs=12-23 irqaffinity=0-11 \
+    quiet
+  initrd /boot/initramfs-z1.img
+}
+
+# ---- 档位 B：低延迟优先（软实时）--------------------------------------------
+# preempt=full + threadirqs 是最接近 RT 的软实时组合；
+# 注意 preempt=full != PREEMPT_RT：spinlock 不会转 rt_mutex，中断也不强制线程化，
+# 最坏延迟通常仍在数十~数百 us 量级。
+menuentry 'Arch Linux - z1 低延迟档 (preempt=full threadirqs)' {
+  load_video; set gfxpayload=keep; insmod gzio; insmod part_gpt; insmod ext2
+  search --no-floppy --fs-uuid --set=root <ROOT_UUID>
+  linux /boot/vmlinuz-<KREL> root=UUID=<ROOT_UUID> rw \
+    preempt=full threadirqs \
+    isolcpus=domain,managed_irq,12-23 nohz_full=12-23 rcu_nocbs=12-23 irqaffinity=0-11 \
+    skew_tick=1 \
+    quiet
+  initrd /boot/initramfs-z1.img
+}
+
+# ---- 档位 C：硬实时（仅当构建了 PREEMPT_RT 变体，镜像名 <KREL>-rt）----------
+# PREEMPT_DYNAMIC 与 PREEMPT_RT 在 Kconfig 中互斥，必须单独编译一个镜像。
+# idle=poll + nmi_watchdog=0：牺牲功耗与 hardlockup 检测换取确定性，
+# 仅建议 isolated 核场景使用。
+menuentry 'Arch Linux - z1 硬实时档 (PREEMPT_RT)' {
+  load_video; set gfxpayload=keep; insmod gzio; insmod part_gpt; insmod ext2
+  search --no-floppy --fs-uuid --set=root <ROOT_UUID>
+  linux /boot/vmlinuz-<KREL>-rt root=UUID=<ROOT_UUID> rw \
+    preempt=full threadirqs \
+    nohz_full=12-23 rcu_nocbs=12-23 rcu_nocb_poll \
+    idle=poll nmi_watchdog=0 audit=0 \
+    quiet
+  initrd /boot/initramfs-z1.img
+}
+
+# ==============================================================================
+# 使用提醒
+# 1. isolcpus 只是"隔离"，不会自动把任务放上去。需显式绑定：
+#      taskset -c 12-23 <低延迟任务>
+#    或 systemd 单元里写 [Service] AllowedCPUs=12-23
+# 2. 不要加 mitigations=off —— 安全代价远大于收益。
+# 3. 查当前档位：cat /sys/kernel/debug/sched/preempt   （none|voluntary|full）
+# ==============================================================================
