@@ -28,8 +28,6 @@
 - 压缩按**解压频率**分工：内核镜像 LZ4、模块与 initramfs zstd
 
 
-> 这不是一份「调几个参数就能更快」的参数集合。每处改动都有对应的诊断依据或上游 Kconfig 依据，每条结论都要能被 A/B 数据复现。
-
 ### 实现目标
 
 | 约束 | 量化指标 | 验收方式 |
@@ -45,7 +43,7 @@
 ### 仓库结构
 
 ```
-00-文档/                   计划书 v1.0 / v1.1（docx + Markdown）、构建与交付手册
+00-文档/                   项目说明、构建与交付手册
 01-基线配置/               config-lts-6.18.x86_64 —— 唯一可信的基线
 02-构建脚本/               build-z1.sh、apply-z1-config.sh
 03-部署配置/               mkinitcpio-z1.conf、grub-40-custom-z1
@@ -211,7 +209,7 @@ The available options are all lopsided. Distribution kernels cover enough driver
 
 The three hard constraints (small size / low footprint / wide driver coverage) pull against each other. Every trade-off is documented together with its cost — I am not going to pretend something can be fast, small, and complete all at once.
 
-> This is not a bag of "tweak these magic parameters". Every change has either diagnostic evidence or an upstream Kconfig justification, and every claim must be reproducible by A/B measurement.
+
 
 ### Goals
 
@@ -392,7 +390,6 @@ GPL-2.0. The `.config` derives from the Linux kernel and Arch Linux packaging an
 
 Три жёстких требования (малый размер / низкое потребление / широкий охват драйверов) противоречат друг другу. Каждый компромисс задокументирован вместе с ценой — я не собираюсь делать вид, что можно получить «быстро, компактно и полностью» одновременно.
 
-> Это не набор «магических параметров». У каждого изменения есть либо диагностическое обоснование, либо обоснование из上游 Kconfig, и каждый вывод должен воспроизводиться A/B-измерениями.
 
 ### Цели
 
@@ -409,7 +406,7 @@ GPL-2.0. The `.config` derives from the Linux kernel and Arch Linux packaging an
 ### Структура репозитория
 
 ```
-00-docs/                 план v1.0 / v1.1 (docx + Markdown), руководство по сборке
+00-docs/                 план v1.0, руководство по сборке
 01-baseline/             config-lts-6.18.x86_64 — единственная надёжная база
 02-build/                build-z1.sh, apply-z1-config.sh
 03-deploy/               mkinitcpio-z1.conf, grub-40-custom-z1
@@ -573,7 +570,7 @@ Les options disponibles sont toutes déséquilibrées. Les noyaux de distributio
 
 Les trois contraintes fortes (petite taille / faible empreinte / large couverture de pilotes) tirent dans des directions opposées. Chaque compromis est documenté avec son coût — je ne prétendrai pas qu'on peut être à la fois rapide, petit et complet.
 
-> Ceci n'est pas une collection de « paramètres magiques ». Chaque modification s'appuie soit sur un diagnostic, soit sur la documentation Kconfig amont, et chaque conclusion doit être reproductible par une mesure A/B.
+
 
 ### Objectifs
 
