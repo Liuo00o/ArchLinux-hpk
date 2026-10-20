@@ -18,11 +18,35 @@
 
 ### 项目说明
 
+我维护 z1 的起因很直接：手上有一批硬件差异很大的机器，既要跑吞吐密集的负载，又要压住延迟敏感任务的尾延迟，同时不希望内核镜像和常驻内存无谓地膨胀。
+
+市面上的选择总是偏科——发行版通用内核驱动面够广，但带着一堆调试设施和按 8192 核预留的静态开销；极致裁剪的内核体积小，但换一台机器就可能起不来。所以我自己做了一份：
+
 - 基线取 **Linux 6.18.57 LTS**（kernel.org 当前 longterm，EOL 2028-12）
 - 配置基线取 **Arch Linux `linux-lts` 包**的 `config.x86_64`——它的 `pkgver` 恰好就是 6.18.57，与源码版本完全对齐
 - 用 `CONFIG_PREEMPT_DYNAMIC` 让**一个镜像**覆盖三种抢占档位，再配合 CPU 分区同时拿到吞吐与低延迟
 - 压缩按**解压频率**分工：内核镜像 LZ4、模块与 initramfs zstd
 
+三条硬约束（小体积 / 低占用 / 广驱动）之间是有张力的，我把每一处取舍都记在文档里，包括代价——不打算用「又快又小又全」这种空话糊弄过去。
+
+### 当前进度（2025-10-20）
+
+编译阶段已完成，验收指标中「小文件体积」一项也已达标；其余仍需真机实测。
+
+| 阶段 | 状态 | 依据 |
+|---|---|---|
+| 立项 / 基线选定 | 完成 | Arch `linux-lts` = 6.18.57，与源码版本对齐 |
+| 瓶颈诊断 / 配置差异集 | 完成 | 280 行 config 变更，9 项断言全绿 |
+| 编译 | **完成** | `6.18.57-z1`，WSL2 内 25m51s |
+| 小文件体积 | **达标 −14.3%** | 133.48 MB vs Arch 官方 155.8 MB |
+| 驱动广度 | 达标（静态） | `=m` 6221，仅少 7 项意图内变更 |
+| 真机冷启动（≥3 台） | **未做** | 无可用物理机 |
+| 吞吐 / 延迟 A/B | **未做** | 需目标机 `metrics.sh` |
+
+> 还没有在真机上引导过这个内核。体积与配置层面的结论可信，
+> 启动、吞吐、延迟三组数据必须上机后再谈。
+
+> 这不是一份「调几个参数就能更快」的参数集合。每处改动都有对应的诊断依据或上游 Kconfig 依据，每条结论都要能被 A/B 数据复现。
 
 ### 实现目标
 
@@ -39,7 +63,7 @@
 ### 仓库结构
 
 ```
-00-文档/                   项目说明、构建与交付手册
+00-文档/                   计划书 v1.0 / v1.1（docx + Markdown）、构建与交付手册
 01-基线配置/               config-lts-6.18.x86_64 —— 唯一可信的基线
 02-构建脚本/               build-z1.sh、apply-z1-config.sh
 03-部署配置/               mkinitcpio-z1.conf、grub-40-custom-z1
@@ -205,7 +229,7 @@ The available options are all lopsided. Distribution kernels cover enough driver
 
 The three hard constraints (small size / low footprint / wide driver coverage) pull against each other. Every trade-off is documented together with its cost — I am not going to pretend something can be fast, small, and complete all at once.
 
-
+> This is not a bag of "tweak these magic parameters". Every change has either diagnostic evidence or an upstream Kconfig justification, and every claim must be reproducible by A/B measurement.
 
 ### Goals
 
@@ -386,6 +410,7 @@ GPL-2.0. The `.config` derives from the Linux kernel and Arch Linux packaging an
 
 Три жёстких требования (малый размер / низкое потребление / широкий охват драйверов) противоречат друг другу. Каждый компромисс задокументирован вместе с ценой — я не собираюсь делать вид, что можно получить «быстро, компактно и полностью» одновременно.
 
+> Это не набор «магических параметров». У каждого изменения есть либо диагностическое обоснование, либо обоснование из上游 Kconfig, и каждый вывод должен воспроизводиться A/B-измерениями.
 
 ### Цели
 
@@ -402,7 +427,7 @@ GPL-2.0. The `.config` derives from the Linux kernel and Arch Linux packaging an
 ### Структура репозитория
 
 ```
-00-docs/                 план v1.0, руководство по сборке
+00-docs/                 план v1.0 / v1.1 (docx + Markdown), руководство по сборке
 01-baseline/             config-lts-6.18.x86_64 — единственная надёжная база
 02-build/                build-z1.sh, apply-z1-config.sh
 03-deploy/               mkinitcpio-z1.conf, grub-40-custom-z1
@@ -566,7 +591,7 @@ Les options disponibles sont toutes déséquilibrées. Les noyaux de distributio
 
 Les trois contraintes fortes (petite taille / faible empreinte / large couverture de pilotes) tirent dans des directions opposées. Chaque compromis est documenté avec son coût — je ne prétendrai pas qu'on peut être à la fois rapide, petit et complet.
 
-
+> Ceci n'est pas une collection de « paramètres magiques ». Chaque modification s'appuie soit sur un diagnostic, soit sur la documentation Kconfig amont, et chaque conclusion doit être reproductible par une mesure A/B.
 
 ### Objectifs
 
