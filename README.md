@@ -1,4 +1,4 @@
-# z1 — 高性能精简 Linux 内核
+# Arch精简 Linux 内核
 
 <div align="center">
 
@@ -17,10 +17,6 @@
 ## 简体中文
 
 ### 项目说明
-
-我维护 z1 的起因很直接：手上有一批硬件差异很大的机器，既要跑吞吐密集的负载，又要压住延迟敏感任务的尾延迟，同时不希望内核镜像和常驻内存无谓地膨胀。
-
-市面上的选择总是偏科——发行版通用内核驱动面够广，但带着一堆调试设施和按 8192 核预留的静态开销；极致裁剪的内核体积小，但换一台机器就可能起不来。所以我自己做了一份：
 
 - 基线取 **Linux 6.18.57 LTS**（kernel.org 当前 longterm，EOL 2028-12）
 - 配置基线取 **Arch Linux `linux-lts` 包**的 `config.x86_64`——它的 `pkgver` 恰好就是 6.18.57，与源码版本完全对齐
@@ -218,10 +214,6 @@ GPL-2.0。`.config` 派生自 Linux 内核与 Arch Linux 打包配置，同样�
 
 ### Project Overview
 
-I maintain z1 because I needed one kernel image that could serve machines with very different hardware, run throughput-heavy workloads, and still keep tail latency under control for delay-sensitive tasks — without the image or resident memory ballooning.
-
-The available options are all lopsided. Distribution kernels cover enough drivers but ship debug facilities and static per-CPU overhead sized for 8192 CPUs. Aggressively trimmed kernels are small but may not boot on a different machine. So I built my own:
-
 - Baseline: **Linux 6.18.57 LTS** (current kernel.org longterm, EOL 2028-12)
 - Config baseline: Arch Linux **`linux-lts`** package `config.x86_64` — its `pkgver` is exactly 6.18.57, so it lines up with the source tree
 - `CONFIG_PREEMPT_DYNAMIC` lets **one image** cover three preemption modes; combined with CPU partitioning it delivers both throughput and low latency
@@ -399,10 +391,6 @@ GPL-2.0. The `.config` derives from the Linux kernel and Arch Linux packaging an
 
 ### О проекте
 
-Я веду z1 потому, что мне нужно было одно ядро для машин с очень разным «железом», которое одновременно выдерживает нагрузку, ориентированную на пропускную способность, и удерживает хвостовую задержку для задач, чувствительных к задержке, — при этом не раздувая ни образ, ни резидентную память.
-
-Готовые варианты всегда однобоки. Дистрибутивные ядра покрывают достаточно драйверов, но несут отладочные механизмы и статические расходы, рассчитанные на 8192 CPU. Сильно урезанные ядра компактны, но могут не загрузиться на другой машине. Поэтому я собрал своё:
-
 - База: **Linux 6.18.57 LTS** (текущая longterm-ветка kernel.org, EOL 2028-12)
 - Базовая конфигурация: `config.x86_64` из пакета Arch Linux **`linux-lts`** — его `pkgver` равен ровно 6.18.57, то есть полностью совпадает с исходниками
 - `CONFIG_PREEMPT_DYNAMIC` позволяет **одному образу** покрыть три режима вытеснения, а вместе с разбиением CPU даёт и пропускную способность, и низкую задержку
@@ -579,10 +567,6 @@ GPL-2.0. `.config` является производной от ядра Linux �
 ## Français
 
 ### Présentation du projet
-
-Je maintiens z1 parce qu'il me fallait une seule image noyau capable de servir des machines au matériel très différent, d'encaisser des charges orientées débit tout en maîtrisant la latence de queue des tâches sensibles au délai — sans laisser gonfler ni l'image ni la mémoire résidente.
-
-Les options disponibles sont toutes déséquilibrées. Les noyaux de distribution couvrent assez de pilotes mais embarquent des mécanismes de débogage et un surcoût statique dimensionné pour 8192 CPU. Les noyaux très élagués sont compacts mais risquent de ne pas démarrer sur une autre machine. J'ai donc fait le mien :
 
 - Base : **Linux 6.18.57 LTS** (branche longterm actuelle de kernel.org, EOL 2028-12)
 - Configuration de base : `config.x86_64` du paquet Arch Linux **`linux-lts`** — son `pkgver` vaut exactement 6.18.57, donc parfaitement aligné sur les sources
